@@ -1,23 +1,18 @@
-import { useState, useEffect } from 'react';
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
+import { useDispatch, useSelector } from 'react-redux';
+import { getContacts, deleteContact, addContact } from 'redux/contactSlice';
+import { setFilter, getFilter } from 'redux/filterSlice';
 
 export const App = () => {
-  const [contacts, setContacts] = useState(
-    () =>
-      JSON.parse(window.localStorage.getItem('contact-list')) ?? [
-        { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-        { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-        { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-        { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-      ]
-  );
+  const contacts = useSelector(getContacts);
+  const filter = useSelector(getFilter);
 
-  const [filter, setFilter] = useState('');
+  const dispatch = useDispatch();
 
   const handleInputChange = evt => {
-    setFilter(evt.currentTarget.value);
+    dispatch(setFilter(evt.currentTarget.value));
   };
 
   const filteredArr = () => {
@@ -27,12 +22,11 @@ export const App = () => {
     return filteredContacts;
   };
 
-  const deleteContact = id => {
-    const deletedContactById = contacts.filter(contact => contact.id !== id);
-    setContacts(deletedContactById);
+  const doDeleteContact = id => {
+    dispatch(deleteContact(id));
   };
 
-  const addContact = newContact => {
+  const doAddContact = newContact => {
     if (
       contacts.some(
         contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
@@ -40,23 +34,19 @@ export const App = () => {
     ) {
       alert(`${newContact.name} is already in contacts`);
     } else {
-      setContacts(prevState => [...prevState, newContact]);
+      dispatch(addContact(newContact));
     }
   };
-
-  useEffect(() => {
-    localStorage.setItem('contact-list', JSON.stringify(contacts));
-  }, [contacts]);
 
   return (
     <div>
       <h1>Phonebook</h1>
-      <ContactForm onSave={addContact} />
+      <ContactForm onSave={doAddContact} />
       <h2>Contacts</h2>
       <Filter filter={filter} handleInputChange={handleInputChange}></Filter>
       <ContactList
         contacts={filteredArr()}
-        onDelete={deleteContact}
+        onDelete={doDeleteContact}
       ></ContactList>
     </div>
   );
